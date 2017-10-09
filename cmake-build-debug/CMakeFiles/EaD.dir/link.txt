@@ -1,0 +1,1 @@
+/usr/bin/c++   -g   CMakeFiles/EaD.dir/main.cpp.o  -o EaD 
