@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+KERNEL_PATH=""
+FIRFOX_PATH=""
+HUAWEI_PATH=""
+VMDK_PATH=""
+DEVICE_PATH="/dev/nvme0n1"
+SAMPLE_MD5_FLAG=5
+PARALLEL_MODE=0
+SAMPLE_LENGHT=512
+
+PREFIX=""
+
+OUTPUT_FOLDER=$1
+
+if [ ! -d "$OUTPUT_FOLDER" ]; then
+    mkdir "$OUTPUT_FOLDER"
+fi
+
+###################################################################
+#                   The sample length is 512
+###################################################################
+PREFIX="sample_md5.old_divide.512B"
+echo "./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel
+
+echo "./EaD -a $FIRFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $FIRFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox
+
+echo "./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei
+
+echo "./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk
+
+###################################################################
+#                   The sample length is 128
+###################################################################
+
+SAMPLE_LENGHT=256
+PREFIX="sample_md5.old_divide.256B"
+
+echo "./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel
+
+echo "./EaD -a $FIRFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $FIRFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox
+
+echo "./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei
+
+echo "./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk
+
+###################################################################
+#                   The sample length is 128
+###################################################################
+
+SAMPLE_LENGHT=128
+
+echo "./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel
+
+echo "./EaD -a $FIRFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $FIRFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox
+
+echo "./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei
+
+echo "./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT"
+./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk

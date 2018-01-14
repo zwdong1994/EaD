@@ -16,6 +16,8 @@
 #include <unistd.h>
 #include <openssl/sha.h>
 #include <openssl/md5.h>
+
+#include "blake2.h"
 #include "dedup.h"
 
 
@@ -27,8 +29,8 @@ pthread_mutex_t mutex_num_control = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_file_num = PTHREAD_MUTEX_INITIALIZER;
 //pthread_mutex_t mutex_start_pthread = PTHREAD_MUTEX_INITIALIZER;
 //pthread_mutex_t mutex_delete_pthread = PTHREAD_MUTEX_INITIALIZER;
-int code_mode; //0(default) means ecc, 1 means md5, 2 means sha256
-int cache_mode; //0(default) means new divide algorithm, 1 means old divide algorithm
+int code_mode; //0(default) means ecc, 1 means md5, 2 means sha256, 3 means sha1, 4 means BLAKE2b
+int divide_mode; //0(default) means new divide algorithm, 1 means old divide algorithm
 
 dedup::dedup() {
     for(int i = 0; i < 1000; ++i){
@@ -53,9 +55,10 @@ dedup::dedup() {
     prefetch_num = 10;
     collision_write_num = 0;
     only_ecc = 0;
+    total_hash_num_in_sample = 0;
 
     code_mode = 0;
-    cache_mode = 0;
+    divide_mode = 0;
     cache_hit_num = 0;
 
     file_number = 0;
@@ -86,14 +89,22 @@ dedup::~dedup() {
     std::string test_title_on = "";
     char aver_time_section[30];
     if(code_mode ==0)
-        test_title = "The DE scheme with new divide performance";
+        test_title = "The EaD scheme with new divide performance";
     else if(code_mode == 1)
         test_title = "The md5 scheme's performance";
     else if(code_mode == 2)
         test_title = "The sha256 scheme's performance";
-    else
+    else if(code_mode == 3)
         test_title = "The sha1 scheme's performance";
-    if(cache_mode == 1)
+    else if(code_mode == 4)
+        test_title = "The BLAKE2b scheme's performance";
+    else if(code_mode == 5)
+        test_title = "The sample+hash deduplication performance";
+    else{
+        std::cout<< "Wrong test scheme." << std::endl;
+        exit(0);
+    }
+    if(divide_mode == 1)
         test_title_on = "The scheme with old divide performance. ";
     para *p = head_pthread_para, *hp = NULL;
     while(p != NULL){
@@ -152,6 +163,10 @@ dedup::~dedup() {
             std::cout << "The ECC number is " << only_ecc << std::endl;
             std::cout << "The ratio that use ECC as fingerprint is: " << (chunk_num - only_ecc) * 100.0 / chunk_num <<"%"<<std::endl;
         }
+        if(total_hash_num_in_sample > 0){
+            std::cout << "The number that hashed by 4KB chunk is: " << total_hash_num_in_sample << std::endl;
+            std::cout << "The ratio of 4KB hash number is: " << total_hash_num_in_sample * 100.0 / chunk_num <<"%"<<std::endl;
+        }
 
         std::cout << "The average time is " << time_aver <<"ms"<< std::endl<<std::endl;
         if(hash_time > 0){
@@ -175,10 +190,16 @@ dedup::~dedup() {
  * cac_mode: the mode of chunk scheme.
  * cache_flag: use cache or not use it.
  * cache_size: decide the size of the cache.
+ * sample_l: the sample length of chunks.
  */
 
-int dedup::dedup_func(char *path, char *dev, int mode, int cac_mode, int cache_flag, int cache_size, int prefetch_length) {
+int dedup::dedup_func(char *path, char *dev, int mode, int divide_m, int cache_flag, int cache_size, int prefetch_length, int sample_l) {
     mp = mt::Get_mt(dev);
+    if(sample_l < 0){
+        std::cout<< "Error sample length!" << std::endl;
+        exit(0);
+    }
+    sample_length = sample_l;
     if(cache_size <0){
         std::cout<< "Error cache size!" << std::endl;
         exit(0);
@@ -194,19 +215,23 @@ int dedup::dedup_func(char *path, char *dev, int mode, int cac_mode, int cache_f
         cac = new_cache::Get_cache(cache_size);
         prefetch_num = prefetch_length;
     }
-    if(mode >= 0 && mode <=3)
+    if(mode >= 0 && mode <=5)
         code_mode = mode;
     else{
         std::cout<< "There are nothing to do with the mode that you input!" << std::endl;
         exit(-3);
     }
-    if(cac_mode >= 0 && cac_mode <=1)
-        cache_mode = cac_mode;
+    if(code_mode == 5 && sample_length <= 0){
+        std::cout<< "Error sample length in the sample_md5 scheme." << std::endl;
+        exit(-3);
+    }
+    if(divide_m >= 0 && divide_m <=1)
+        divide_mode = divide_m;
     else{
         std::cout<< "There are nothing to do with the cache mode that you input!" << std::endl;
         exit(-4);
     }
-    if(cache_mode == 0)
+    if(divide_mode == 0)
         travel_dir(path);
     else
         travel_dir_noparallel(path);
@@ -244,8 +269,16 @@ void dedup::travel_dir_noparallel(char *path) {
                 md5_file_reader_noparallel(child_path);
             else if(code_mode == 2)
                 sha256_file_reader_noparallel(child_path);
-            else
+            else if(code_mode == 3)
                 sha1_file_reader_noparallel(child_path);
+            else if(code_mode == 4)
+                BLAKE2b_file_reader_noparallel(child_path);
+            else if(code_mode == 5)
+                sample_md5(child_path);
+            else{
+                std::cout<< "Wrong test scheme." << std::endl;
+                exit(0);
+            }
         }
     }
 }
@@ -352,7 +385,7 @@ int dedup::file_reader_noparallel(char *path) {
 }
 
 int dedup::md5_file_reader_noparallel(char *path) {
-    uint8_t hv[MD5_CODE_LENGTH+ 1];
+    uint8_t hv[MD5_CODE_LENGTH + 1];
     char bch_result[2 * MD5_CODE_LENGTH + 1];
     FILE *fp = NULL;
     uint8_t chk_cont[4097];
@@ -600,6 +633,217 @@ int dedup::sha1_file_reader_noparallel(char *path) {
     return 0;
 }
 
+int dedup::BLAKE2b_file_reader_noparallel(char *path) {
+	uint8_t hv[BLAKE2B_CODE_LENGTH + 1];
+	char bch_result[2 * BLAKE2B_CODE_LENGTH + 1];
+	FILE *fp = NULL;
+	uint8_t chk_cont[4097];
+	int bloom_flag = 0;
+	int cache_flag = 0;
+	int mt_flag = 0;
+	double stat_t = 0.0;
+	double end_t = 0.0;
+	double write_elps = 0.0;
+	char blk_num_str[30];
+	uint8_t key[BLAKE2B_KEYBYTES];
+	std::string mid_str;
+	cp_t ti;
+
+	for( int i = 0; i < BLAKE2B_KEYBYTES; ++i )
+		key[i] = ( uint8_t )i;
+
+	if((fp = fopen(path, "r")) == NULL){
+		std::cout<<"Open file error!The file name is: "<<path<<std::endl;
+		return 0;
+	}
+	while(1){
+		mid_elpstime = 0.0;
+		memset(chk_cont, 0, READ_LENGTH);
+		if(fread(chk_cont, sizeof(char), READ_LENGTH, fp) == 0)
+			break;
+		chunk_num++;
+		block_id ++;
+		if(block_id % 10000 == 0){
+			sprintf(blk_num_str, "%ld-%ld", block_id - 10000, block_id - 1);
+			std::cout.setf(std::ios::fixed);
+			std::cout<<std::left<<std::setw(30)<< blk_num_str
+							 <<std::left<<std::setw(30)<< (time_total - head_10000_time) / 10000
+							 <<std::left<<std::setw(30)<< (chunk_num - chunk_not_dup) * 100.0 / chunk_num
+							 <<std::left<<std::setw(30)<< time_total / chunk_num
+							 <<std::left<<std::setw(30)<< time_total / 1000 <<std::endl;
+			head_10000_time = time_total;
+		}
+
+
+		memset(hv, 0, BLAKE2B_CODE_LENGTH + 1);
+		memset(bch_result, 0, 2 * BLAKE2B_CODE_LENGTH + 1);
+//        encode_bch(bch, chk_cont, READ_LENGTH, hv); //get bch code from a block reference
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+		stat_t = ti.get_time();
+		//MD5((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
+		//SHA1((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
+		blake2b( hv, BLAKE2B_CODE_LENGTH, chk_cont, READ_LENGTH, NULL, 0 );
+		end_t = ti.get_time();
+		//ti.cp_all((end_t - stat_t) * 1000, 0);
+		time_total += (end_t - stat_t) * 1000;
+		hash_time += (end_t - stat_t) * 1000;
+		mid_elpstime += (end_t - stat_t) * 1000;
+		/////////////////////////////////////////////////////////////
+		ByteToHexStr(hv, bch_result, BLAKE2B_CODE_LENGTH);
+		bloom_flag = dedup_bloom(bch_result, 2 * BLAKE2B_CODE_LENGTH);
+		/////////////////////////////////////////////////////////////
+		stat_t = ti.get_time();
+
+		mt_flag = dedup_noread_mt(bch_result, (char *)chk_cont, 2 * BLAKE2B_CODE_LENGTH, cache_flag, bloom_flag);
+
+		if(mt_flag == 2){
+			chunk_not_dup++;
+			write_block(mp -> alloc_addr_point - 1, (char *)chk_cont, write_elps);
+			time_total_write += write_elps;
+			//ti.cp_all(0.2, 0);
+			//time_total += 0.2;
+		}
+		end_t = ti.get_time();
+
+		time_total += (end_t - stat_t) * 1000;
+		mid_elpstime += (end_t - stat_t) * 1000;
+		avertime_distribute(mid_elpstime);
+		avertime_distribute_less(mid_elpstime);
+
+	}
+
+	fclose(fp);
+	return 0;
+}
+
+int dedup::sample_md5(char *path){
+    uint8_t hv[MD5_CODE_LENGTH + 1];
+    char bch_result[2 * MD5_CODE_LENGTH + 1];
+    FILE *fp = NULL;
+    uint8_t chk_cont[4097];
+    int bloom_flag = 0;
+    int cache_flag = 0;
+    int mt_flag = 0;
+    int sample_flag = 0;
+    double stat_t = 0.0;
+    double end_t = 0.0;
+    double write_elps = 0.0;
+    char blk_num_str[30];
+    std::set<std::string>::iterator iter;
+
+    unsigned char sample_buf[SAMPLE_LENGTH + 1];
+    uint8_t key[BLAKE2B_KEYBYTES];
+    std::string mid_str;
+    cp_t ti;
+
+    for( int i = 0; i < BLAKE2B_KEYBYTES; ++i )
+        key[i] = ( uint8_t )i;
+
+    if((fp = fopen(path, "r")) == NULL){
+        std::cout<<"Open file error!The file name is: "<<path<<std::endl;
+        return 0;
+    }
+    while(1){
+        mid_elpstime = 0.0;
+        memset(chk_cont, 0, READ_LENGTH);
+        if(fread(chk_cont, sizeof(char), READ_LENGTH, fp) == 0)
+            break;
+        memcpy(sample_buf, chk_cont, SAMPLE_LENGTH);
+
+        chunk_num++;
+        block_id ++;
+        if(block_id % 10000 == 0){
+            sprintf(blk_num_str, "%ld-%ld", block_id - 10000, block_id - 1);
+            std::cout.setf(std::ios::fixed);
+            std::cout<<std::left<<std::setw(30)<< blk_num_str
+                     <<std::left<<std::setw(30)<< (time_total - head_10000_time) / 10000
+                     <<std::left<<std::setw(30)<< (chunk_num - chunk_not_dup) * 100.0 / chunk_num
+                     <<std::left<<std::setw(30)<< time_total / chunk_num
+                     <<std::left<<std::setw(30)<< time_total / 1000 <<std::endl;
+            head_10000_time = time_total;
+        }
+
+
+        memset(hv, 0, MD5_CODE_LENGTH + 1);
+        memset(bch_result, 0, 2 * MD5_CODE_LENGTH + 1);
+//        encode_bch(bch, chk_cont, READ_LENGTH, hv); //get bch code from a block reference
+
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+ * Hash sample buf.
+*/
+        stat_t = ti.get_time();
+        MD5((unsigned char *)sample_buf, (size_t)SAMPLE_LENGTH, (unsigned char *)hv); // hash sample
+        //SHA1((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
+        end_t = ti.get_time();
+        time_total += (end_t - stat_t) * 1000;
+        hash_time += (end_t - stat_t) * 1000;
+        mid_elpstime += (end_t - stat_t) * 1000;
+        ByteToHexStr(hv, bch_result, MD5_CODE_LENGTH);
+        bch_result[2 * MD5_CODE_LENGTH] = '\0';
+        mid_str = bch_result;
+
+        stat_t = ti.get_time();
+        if((iter = sample_hash_vector.find(mid_str)) != sample_hash_vector.end()){ //sample hash exist
+            memset(hv, 0, MD5_CODE_LENGTH + 1);
+            memset(bch_result, 0, 2 * MD5_CODE_LENGTH + 1);
+            MD5((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
+            ++ total_hash_num_in_sample;
+            sample_flag = 1;
+        } else{ // sample hash not exist
+            sample_hash_vector.insert(mid_str);
+            sample_flag = 0;
+        }
+        end_t = ti.get_time();
+        time_total += (end_t - stat_t) * 1000;
+        if(sample_flag == 1)
+            hash_time += (end_t - stat_t) * 1000;
+        mid_elpstime += (end_t - stat_t) * 1000;
+
+
+//////////////////////////////////////////////////////////////////////////////////
+        //ti.cp_all((end_t - stat_t) * 1000, 0);
+
+        if(sample_flag == 1){
+/////////////////////////////////////////////////////////////
+            ByteToHexStr(hv, bch_result, MD5_CODE_LENGTH);
+            bloom_flag = dedup_bloom(bch_result, 2 * MD5_CODE_LENGTH);
+/////////////////////////////////////////////////////////////
+            stat_t = ti.get_time();
+            mt_flag = dedup_noread_mt(bch_result, (char *)chk_cont, 2 * MD5_CODE_LENGTH, cache_flag, bloom_flag);
+            end_t = ti.get_time();
+
+            time_total += (end_t - stat_t) * 1000;
+            mid_elpstime += (end_t - stat_t) * 1000;
+        } else{
+            mt_flag = 2;
+        }
+        stat_t = ti.get_time();
+        if(mt_flag == 2){
+            chunk_not_dup++;
+            write_block(mp -> alloc_addr_point - 1, (char *)chk_cont, write_elps);
+            time_total_write += write_elps;
+            //ti.cp_all(0.2, 0);
+            //time_total += 0.2;
+        }
+        end_t = ti.get_time();
+
+        time_total += (end_t - stat_t) * 1000;
+        mid_elpstime += (end_t - stat_t) * 1000;
+        avertime_distribute(mid_elpstime);
+        avertime_distribute_less(mid_elpstime);
+
+    }
+
+    fclose(fp);
+    return 0;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void dedup::travel_dir(char *path) {
     DIR *pdir;
@@ -612,7 +856,6 @@ void dedup::travel_dir(char *path) {
         exit(-1);
     }
 
-//    std::cout<<"1"<<std::endl;
     while((ent = readdir(pdir)) != NULL){
         char child_path[512];
         memset(child_path, 0, 512);
@@ -635,10 +878,9 @@ void dedup::travel_dir(char *path) {
             file_para->this_ = this;
             if(file_number >= PTHREAD_NUM - 1){
                 pthread_mutex_lock(&mutex_num_control);
-//                std::cout<< "In the if " <<file_number << std::endl;
 
             }
-//            pthread_mutex_lock(&mutex_start_pthread);
+
             err_p = pthread_create(&pid, NULL, &start_pthread, (void *)file_para);
             file_para->pid = pid;
             if(err_p){
@@ -646,12 +888,9 @@ void dedup::travel_dir(char *path) {
                 exit(-2);
             }
 
-//            pthread_mutex_lock(&mutex_delete_pthread);
             file_para -> next = head_pthread_para;
             head_pthread_para = file_para;
-//            pthread_mutex_unlock(&mutex_delete_pthread);
 
-//            sleep(1);
             pthread_mutex_lock(&mutex_file_num);
             file_number ++;
             pthread_mutex_unlock(&mutex_file_num);
@@ -669,8 +908,10 @@ void *dedup::start_pthread(void *arg) {
         mid -> this_ ->md5_file_reader(mid -> path);
     else if(code_mode == 2)
         mid -> this_ ->sha256_file_reader(mid -> path);
-    else
+    else if(code_mode == 3)
         mid -> this_ -> sha1_file_reader(mid -> path);
+    else
+        mid -> this_ -> BLAKE2b_file_reader_noparallel(mid -> path);
     return nullptr;
 }
 
@@ -1512,3 +1753,5 @@ void dedup::prefetch() {
     prefetch_flag = 0;
     delete head_addr;
 }
+
+

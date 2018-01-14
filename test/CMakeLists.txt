@@ -7,7 +7,7 @@ ADD_DEFINITIONS(-g -W -lpthread -Wall -lrt -lcrypto -lstdc++ -D_GLIBCXX_USE_CXX1
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
 
-include_directories(../include /usr/include)
+include_directories(../include /usr/include ../BLAKE2b)
 link_libraries("/usr/lib/x86_64-linux-gnu/librt.so")
 link_libraries("/usr/lib/x86_64-linux-gnu/libcrypto.a")
 link_directories(/lib/x86_64-linux-gnu)

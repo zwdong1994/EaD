@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <stdlib.h>
 #include "dedup.h"
 
 void usage(){
@@ -9,20 +10,21 @@ void usage(){
     std::cout << "-d: The strategy to read data sets."<< std::endl;
     std::cout << "-e: Whether use cache."<< std::endl;
     std::cout << "-f: The cache size."<< std::endl;
-    std::cout << "-a: The prefetch cache length."<< std::endl;
+    std::cout << "-g: The prefetch cache length."<< std::endl;
 }
 
 int main(int argc, char *argv[]) {
-    char path[256];
-    char devname[30];
+    char path[256] = {};
+    char devname[30] = {};
     int mode = 0;
     int parallel_mode = 0;
     int cache_size = 0;
     int is_cache = 0;
     int prefetch_length = 0;
+    int sample_l = 0;
     int ch;
-    dedup ded;
-    while((ch = getopt(argc, argv, "a:b:c:d:e:f:g:") ) != 1){
+
+    while((ch = getopt(argc, argv, "a:b:c:d:e:f:g:s:") ) != -1){
         switch (ch){
             case 'a':
                 strcpy(path, optarg);
@@ -40,8 +42,17 @@ int main(int argc, char *argv[]) {
                     std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: MD5" << std::endl;
                 else if(mode == 2)
                     std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: SHA256" << std::endl;
-                else
+                else if(mode == 3)
                     std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: SHA1" << std::endl;
+                else if(mode == 4)
+                    std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: BLAKE2b" << std::endl;
+                else if(mode == 5)
+                    std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: Sample_md5" << std::endl;
+                else{
+                    std::cout << "Error parameter!" << std::endl;
+                    return 0;
+                }
+
                 break;
             case 'd':
                 parallel_mode = atoi(optarg);
@@ -57,9 +68,9 @@ int main(int argc, char *argv[]) {
             case 'e':
                 is_cache = atoi(optarg);
                 if(is_cache == 0)
-                    std::cout << "This test adapt cache strategy." << std::endl;
+                    std::cout << "This test doesn't adapt the cache strategy." << std::endl;
                 else if(is_cache == 1)
-                    std::cout << "This test doesn't adapt cache strategy." << std::endl;
+                    std::cout << "This test adapt the cache strategy." << std::endl;
                 else{
                     std::cout << "Error parameter!" << std::endl;
                     return 0;
@@ -73,11 +84,27 @@ int main(int argc, char *argv[]) {
                 prefetch_length = atoi(optarg);
                 std::cout << "The prefetch cache length is: " << prefetch_length << std::endl;
                 break;
+            case 's':
+                sample_l = atoi(optarg);
+                if(sample_l < 0){
+                    std::cout << "Error parameter! 'sample_l' need to be larger than 0." << std::endl;
+                    return 0;
+                }
+                std::cout << "Sample length is: " << sample_l << std::endl;
+                break;
             default:
                 usage();
+                exit(-1);
 
         }
     }
-    ded.dedup_func(path, devname, mode, parallel_mode, is_cache, cache_size, prefetch_length);
+    if(mode == 5 && sample_l <= 0){
+        std::cout<< "Error sample length in the sample_md5 scheme." << std::endl;
+        return 0;
+    }
+    std::cout << "Please input the enter to start the test! " << std::endl;
+    getchar();
+    dedup ded;
+    ded.dedup_func(path, devname, mode, parallel_mode, is_cache, cache_size, prefetch_length, sample_l);
     return 0;
 }

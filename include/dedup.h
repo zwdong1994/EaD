@@ -6,7 +6,7 @@
 #define ED_DEDUP_H
 
 #include <stdint.h>
-
+#include <set>
 #include "com_t.h"
 #include "mt.h"
 #include "bch.h"
@@ -22,6 +22,8 @@
 #define MD5_CODE_LENGTH 16
 #define SHA256_CODE_LENGTH 32
 #define SHA1_CODE_LENGTH 20
+#define BLAKE2B_CODE_LENGTH 20
+#define SAMPLE_LENGTH sample_length
 
 /*struct crash_test{
     char reference1[READ_LENGTH];
@@ -35,7 +37,7 @@ public:
 
     void travel_dir(char path[]);
     void travel_dir_noparallel(char path[]);
-    int dedup_func(char path[], char dev[], int mode, int cache_mode, int cache_flag, int cache_size, int prefetch_length);
+    int dedup_func(char path[], char dev[], int mode, int divide_m, int cache_flag, int cache_size, int prefetch_length, int sample_l);
     int file_reader(char *path);
     int file_reader_noparallel(char *path);
     int md5_file_reader(char *c_path);
@@ -44,6 +46,9 @@ public:
     int sha256_file_reader_noparallel(char *c_path);
     int sha1_file_reader(char *c_path);
     int sha1_file_reader_noparallel(char *c_path);
+    int BLAKE2b_file_reader_noparallel(char *c_path);
+    int sample_md5(char *c_path);
+    std::set<std::string> sample_hash_vector;
     //int dedup_process(char bch_result[], char *chk_cont, int bch_length);
     uint64_t chunk_num;
     double time_total;
@@ -58,6 +63,7 @@ public:
     uint64_t read_number;
     uint64_t read_10000_num;
     uint64_t collision_write_num;
+    uint64_t total_hash_num_in_sample;
 
 private:
 
@@ -68,6 +74,7 @@ private:
         struct mid_para *next;
     }para;
     cp_t ti;
+    int sample_length;
     uint64_t time_collect_num[1000]; //this array record the number of average time in every 0.001ms(0.001ms - 0.1ms -......)
     uint64_t time_collect_num_less[1000]; //this array record the number of average time in every 0.001ms(0.001ms - 0.1ms -......)
     static void *start_pthread(void *arg);
