@@ -4,7 +4,7 @@ project(EaD)
 SET(CMAKE_C_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 11)
 
-ADD_DEFINITIONS(-g -W -lpthread -Wall -lrt -lcrypto -lstdc++ -D_GLIBCXX_USE_CXX11_ABI=0 -fpermissive -O3)
+ADD_DEFINITIONS(-g -W -lpthread -Wall -std=c++11 -lrt -lcrypto -lstdc++ -D_GLIBCXX_USE_CXX11_ABI=0 -fpermissive -O3)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
 
