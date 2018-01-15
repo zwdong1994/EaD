@@ -29,69 +29,33 @@ int main(int argc, char *argv[]) {
         switch (ch){
             case 'a':
                 strcpy(path, optarg);
-                std::cout << "The data set path is: " << path << std::endl;
                 break;
             case 'b':
                 strcpy(devname, optarg);
-                std::cout << "The device path is: " << devname << std::endl;
+
                 break;
             case 'c':
                 mode = atoi(optarg);
-                if(mode == 0)
-                    std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: EaD" << std::endl;
-                else if(mode == 1)
-                    std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: MD5" << std::endl;
-                else if(mode == 2)
-                    std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: SHA256" << std::endl;
-                else if(mode == 3)
-                    std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: SHA1" << std::endl;
-                else if(mode == 4)
-                    std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: BLAKE2b" << std::endl;
-                else if(mode == 5)
-                    std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: Sample_md5" << std::endl;
-                else{
-                    std::cout << "Error parameter!" << std::endl;
-                    return 0;
-                }
 
                 break;
             case 'd':
                 parallel_mode = atoi(optarg);
-                if(parallel_mode == 0)
-                    std::cout << "The read file strategy is sequential read." << std::endl;
-                else if(parallel_mode == 1)
-                    std::cout << "The read file strategy is parallel read." << std::endl;
-                else{
-                    std::cout << "Error parameter!" << std::endl;
-                    return 0;
-                }
+
                 break;
             case 'e':
                 is_cache = atoi(optarg);
-                if(is_cache == 0)
-                    std::cout << "This test doesn't adapt the cache strategy." << std::endl;
-                else if(is_cache == 1)
-                    std::cout << "This test adapt the cache strategy." << std::endl;
-                else{
-                    std::cout << "Error parameter!" << std::endl;
-                    return 0;
-                }
                 break;
             case 'f':
                 cache_size = atoi(optarg);
-                std::cout << "Cache size is: " << cache_size << std::endl;
+
                 break;
             case 'g':
                 prefetch_length = atoi(optarg);
-                std::cout << "The prefetch cache length is: " << prefetch_length << std::endl;
+
                 break;
             case 's':
                 sample_l = atoi(optarg);
-                if(sample_l < 0){
-                    std::cout << "Error parameter! 'sample_l' need to be larger than 0." << std::endl;
-                    return 0;
-                }
-                std::cout << "Sample length is: " << sample_l << std::endl;
+
                 break;
             default:
                 usage();
@@ -99,6 +63,67 @@ int main(int argc, char *argv[]) {
 
         }
     }
+    if(strlen(path) == 0){
+        std::cout << "There is no data set path input." << std::endl;
+        exit(0);
+    } else{
+        std::cout << "The data set path is: " << path << std::endl;
+    }
+    if(strlen(devname) == 0){
+        std::cout << "There is no device path input." << std::endl;
+        exit(0);
+    } else{
+        std::cout << "The device path is: " << devname << std::endl;
+    }
+
+    if(mode == 0)
+        std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: EaD" << std::endl;
+    else if(mode == 1)
+        std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: MD5" << std::endl;
+    else if(mode == 2)
+        std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: SHA256" << std::endl;
+    else if(mode == 3)
+        std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: SHA1" << std::endl;
+    else if(mode == 4)
+        std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: BLAKE2b" << std::endl;
+    else if(mode == 5)
+        std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: Sample_md5" << std::endl;
+    else{
+        std::cout << "Error deduplication scheme parameter!" << std::endl;
+        return 0;
+    }
+
+    if(parallel_mode == 0)
+        std::cout << "The read file strategy is sequential read." << std::endl;
+    else if(parallel_mode == 1)
+        std::cout << "The read file strategy is parallel read." << std::endl;
+    else{
+        std::cout << "Error parameter!" << std::endl;
+        return 0;
+    }
+
+    if(is_cache == 0)
+        std::cout << "This test doesn't adapt the cache strategy." << std::endl;
+    else if(is_cache == 1)
+        std::cout << "This test adapt the cache strategy." << std::endl;
+    else{
+        std::cout << "Error parameter!" << std::endl;
+        return 0;
+    }
+
+    if(cache_size > 0)
+        std::cout << "Cache size is: " << cache_size << std::endl;
+
+    if(prefetch_length > 0)
+        std::cout << "The prefetch cache length is: " << prefetch_length << std::endl;
+
+    if(sample_l < 0){
+        std::cout << "Error parameter! 'sample_l' need to be larger than 0." << std::endl;
+        return 0;
+    }
+    if(sample_l > 0)
+        std::cout << "Sample length is: " << sample_l << std::endl;
+
     if(mode == 5 && sample_l <= 0){
         std::cout<< "Error sample length in the sample_md5 scheme." << std::endl;
         return 0;
