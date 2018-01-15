@@ -93,9 +93,9 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if(parallel_mode == 0)
+    if(parallel_mode == 1)
         std::cout << "The read file strategy is sequential read." << std::endl;
-    else if(parallel_mode == 1)
+    else if(parallel_mode == 0)
         std::cout << "The read file strategy is parallel read." << std::endl;
     else{
         std::cout << "Error parameter!" << std::endl;
