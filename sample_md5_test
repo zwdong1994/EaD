@@ -23,7 +23,7 @@ do
     elif [ "$option" == "vmdk" ]; then
         VMDK_PATH=${var#vmdk=}
     elif [ "$option" == "test_folder" ]; then
-        OUTPUT_FOLDER=${var#test_folde=}
+        OUTPUT_FOLDER=${var#test_folder=}
     else
         echo "Wrong parameters!"
         exit 1
