@@ -128,8 +128,8 @@ int main(int argc, char *argv[]) {
         std::cout<< "Error sample length in the sample_md5 scheme." << std::endl;
         return 0;
     }
-    std::cout << "Please input the enter to start the test! " << std::endl;
-    getchar();
+    //std::cout << "Please input the enter to start the test! " << std::endl;
+    //getchar();
     dedup ded;
     ded.dedup_func(path, devname, mode, parallel_mode, is_cache, cache_size, prefetch_length, sample_l);
     return 0;
