@@ -160,8 +160,11 @@ dedup::~dedup() {
             std::cout << "The dedupe rate is " <<  (chunk_num - chunk_not_dup) * 100.0 / chunk_num <<"%"<<std::endl;
             std::cout << "The not dedupe chunk number is " << chunk_not_dup << std::endl;
             std::cout << "The collision write number is " << collision_write_num << std::endl;
-            std::cout << "The ECC number is " << only_ecc << std::endl;
-            std::cout << "The ratio that use ECC as fingerprint is: " << (chunk_num - only_ecc) * 100.0 / chunk_num <<"%"<<std::endl;
+            if(only_ecc > 0) {
+                std::cout << "The ECC number is " << only_ecc << std::endl;
+                std::cout << "The ratio that use ECC as fingerprint is: " << (chunk_num - only_ecc) * 100.0 / chunk_num
+                          << "%" << std::endl;
+            }
         }
         if(total_hash_num_in_sample > 0){
             std::cout << "The number that hashed by 4KB chunk is: " << total_hash_num_in_sample << std::endl;
@@ -821,6 +824,11 @@ int dedup::sample_md5(char *path){
             time_total += (end_t - stat_t) * 1000;
             mid_elpstime += (end_t - stat_t) * 1000;
         } else{
+            memset(hv, 0, MD5_CODE_LENGTH + 1);
+            memset(bch_result, 0, 2 * MD5_CODE_LENGTH + 1);
+            MD5((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
+            ByteToHexStr(hv, bch_result, MD5_CODE_LENGTH);
+            dedup_noread_mt(bch_result, (char *)chk_cont, 2 * MD5_CODE_LENGTH, 0, 0);
             mt_flag = 2;
         }
         stat_t = ti.get_time();
