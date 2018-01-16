@@ -829,6 +829,7 @@ int dedup::sample_md5(char *path){
             memset(bch_result, 0, 2 * MD5_CODE_LENGTH + 1);
             MD5((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
             ByteToHexStr(hv, bch_result, MD5_CODE_LENGTH);
+            dedup_bloom(bch_result, 2 * MD5_CODE_LENGTH);
             dedup_noread_mt(bch_result, (char *)chk_cont, 2 * MD5_CODE_LENGTH, 0, 0);
             mt_flag = 2;
         }
