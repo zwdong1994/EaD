@@ -753,6 +753,7 @@ int dedup::sample_md5(char *path){
     while(1){
         mid_elpstime = 0.0;
         memset(chk_cont, 0, READ_LENGTH);
+        memset(sample_buf, 0, SAMPLE_LENGTH);
         if(fread(chk_cont, sizeof(char), READ_LENGTH, fp) == 0)
             break;
         memcpy(sample_buf, chk_cont, SAMPLE_LENGTH);
