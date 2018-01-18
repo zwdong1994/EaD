@@ -39,17 +39,17 @@ fi
 #                   The sample length is 512
 ###################################################################
 #PREFIX="sample_md5.old_divide.512B"
-echo "./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel"
-./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel
+#echo "./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel"
+#./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel
 
-echo "./EaD -a $FIREFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox"
-./EaD -a $FIREFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox
+#echo "./EaD -a $FIREFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox"
+#./EaD -a $FIREFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox
 
-echo "./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei"
-./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei
+#echo "./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei"
+#./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei
 
-echo "./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk"
-./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk
+#echo "./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk"
+#./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk
 
 ###################################################################
 #                   The sample length is 128
@@ -75,6 +75,25 @@ echo "./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE 
 ###################################################################
 
 SAMPLE_LENGHT=128
+#PREFIX="sample_md5.old_divide.128B"
+PREFIX="sample_md5.old_divide.${SAMPLE_LENGHT}"
+echo "./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel"
+./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel
+
+echo "./EaD -a $FIREFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox"
+./EaD -a $FIREFOX_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.firefox
+
+echo "./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei"
+./EaD -a $HUAWEI_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.huawei
+
+echo "./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk"
+./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.vmdk
+
+###################################################################
+#                   The sample length is 64
+###################################################################
+
+SAMPLE_LENGHT=64
 #PREFIX="sample_md5.old_divide.128B"
 PREFIX="sample_md5.old_divide.${SAMPLE_LENGHT}"
 echo "./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel"
