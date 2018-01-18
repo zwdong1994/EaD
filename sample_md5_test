@@ -75,6 +75,7 @@ echo "./EaD -a $VMDK_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE 
 ###################################################################
 
 SAMPLE_LENGHT=128
+PREFIX="sample_md5.old_divide.128B"
 
 echo "./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel"
 ./EaD -a $KERNEL_PATH -b $DEVICE_PATH -c $SAMPLE_MD5_FLAG -d $PARALLEL_MODE -s $SAMPLE_LENGHT > ${OUTPUT_FOLDER}/${PREFIX}.kernel
