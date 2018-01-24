@@ -100,6 +100,8 @@ dedup::~dedup() {
         test_title = "The BLAKE2b scheme's performance";
     else if(code_mode == 5)
         test_title = "The sample+hash deduplication performance";
+    else if(code_mode == 6)
+        test_title = "The sample(CAFTL) deduplication performance";
     else{
         std::cout<< "Wrong test scheme." << std::endl;
         exit(0);
@@ -218,14 +220,14 @@ int dedup::dedup_func(char *path, char *dev, int mode, int divide_m, int cache_f
         cac = new_cache::Get_cache(cache_size);
         prefetch_num = prefetch_length;
     }
-    if(mode >= 0 && mode <=5)
+    if(mode >= 0 && mode <=6)
         code_mode = mode;
     else{
         std::cout<< "There are nothing to do with the mode that you input!" << std::endl;
         exit(-3);
     }
-    if(code_mode == 5 && sample_length <= 0){
-        std::cout<< "Error sample length in the sample_md5 scheme." << std::endl;
+    if((code_mode == 5 || code_mode == 6) && sample_length <= 0){
+        std::cout<< "Error sample length in the sample scheme." << std::endl;
         exit(-3);
     }
     if(divide_m >= 0 && divide_m <=1)
@@ -278,6 +280,8 @@ void dedup::travel_dir_noparallel(char *path) {
                 BLAKE2b_file_reader_noparallel(child_path);
             else if(code_mode == 5)
                 sample_md5(child_path);
+            else if(code_mode == 6)
+                sample(child_path);
             else{
                 std::cout<< "Wrong test scheme." << std::endl;
                 exit(0);
@@ -853,6 +857,140 @@ int dedup::sample_md5(char *path){
     fclose(fp);
     return 0;
 }
+
+
+int dedup::sample(char *path){
+    uint8_t hv[MD5_CODE_LENGTH + 1];
+    char bch_result[2 * MD5_CODE_LENGTH + 1];
+    FILE *fp = NULL;
+    uint8_t chk_cont[4097];
+    int bloom_flag = 0;
+    int cache_flag = 0;
+    int mt_flag = 0;
+    int sample_flag = 0;
+    double stat_t = 0.0;
+    double end_t = 0.0;
+    double write_elps = 0.0;
+    char blk_num_str[30];
+    std::set<std::string>::iterator iter;
+
+    unsigned char sample_buf[SAMPLE_LENGTH + 1];
+    uint8_t key[BLAKE2B_KEYBYTES];
+    std::string mid_str;
+    cp_t ti;
+
+    for( int i = 0; i < BLAKE2B_KEYBYTES; ++i )
+        key[i] = ( uint8_t )i;
+
+    if((fp = fopen(path, "r")) == NULL){
+        std::cout<<"Open file error!The file name is: "<<path<<std::endl;
+        return 0;
+    }
+    while(1){
+        mid_elpstime = 0.0;
+        memset(chk_cont, 0, READ_LENGTH);
+        memset(sample_buf, 0, SAMPLE_LENGTH);
+        if(fread(chk_cont, sizeof(char), READ_LENGTH, fp) == 0)
+            break;
+        memcpy(sample_buf, chk_cont, SAMPLE_LENGTH);
+
+        chunk_num++;
+        block_id ++;
+        if(block_id % 10000 == 0){
+            sprintf(blk_num_str, "%ld-%ld", block_id - 10000, block_id - 1);
+            std::cout.setf(std::ios::fixed);
+            std::cout<<std::left<<std::setw(30)<< blk_num_str
+                     <<std::left<<std::setw(30)<< (time_total - head_10000_time) / 10000
+                     <<std::left<<std::setw(30)<< (chunk_num - chunk_not_dup) * 100.0 / chunk_num
+                     <<std::left<<std::setw(30)<< time_total / chunk_num
+                     <<std::left<<std::setw(30)<< time_total / 1000 <<std::endl;
+            head_10000_time = time_total;
+        }
+
+
+
+        memset(bch_result, 0, 2 * MD5_CODE_LENGTH + 1);
+//        encode_bch(bch, chk_cont, READ_LENGTH, hv); //get bch code from a block reference
+
+
+////////////////////////////////////////////////////////////////////////////////
+/*
+ * Hash sample buf.
+*/
+/*        stat_t = ti.get_time();
+        MD5((unsigned char *)sample_buf, (size_t)SAMPLE_LENGTH, (unsigned char *)hv); // hash sample
+        //SHA1((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
+        end_t = ti.get_time();
+        time_total += (end_t - stat_t) * 1000;
+        hash_time += (end_t - stat_t) * 1000;
+        mid_elpstime += (end_t - stat_t) * 1000;*/
+        ByteToHexStr(sample_buf, bch_result, SAMPLE_LENGTH);
+        bch_result[2 * SAMPLE_LENGTH] = '\0';
+        mid_str = bch_result;
+
+        stat_t = ti.get_time();
+        if((iter = sample_hash_vector.find(mid_str)) != sample_hash_vector.end()){ //sample hash exist
+            memset(hv, 0, MD5_CODE_LENGTH + 1);
+            memset(bch_result, 0, 2 * MD5_CODE_LENGTH + 1);
+            MD5((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
+            ++ total_hash_num_in_sample;
+            sample_flag = 1;
+        } else{ // sample hash not exist
+            sample_hash_vector.insert(mid_str);
+            sample_flag = 0;
+        }
+        end_t = ti.get_time();
+        time_total += (end_t - stat_t) * 1000;
+        if(sample_flag == 1)
+            hash_time += (end_t - stat_t) * 1000;
+        mid_elpstime += (end_t - stat_t) * 1000;
+
+
+//////////////////////////////////////////////////////////////////////////////////
+        //ti.cp_all((end_t - stat_t) * 1000, 0);
+
+        if(sample_flag == 1){
+/////////////////////////////////////////////////////////////
+            ByteToHexStr(hv, bch_result, MD5_CODE_LENGTH);
+            bloom_flag = dedup_bloom(bch_result, 2 * MD5_CODE_LENGTH);
+/////////////////////////////////////////////////////////////
+            stat_t = ti.get_time();
+            mt_flag = dedup_noread_mt(bch_result, (char *)chk_cont, 2 * MD5_CODE_LENGTH, cache_flag, bloom_flag);
+            end_t = ti.get_time();
+
+            time_total += (end_t - stat_t) * 1000;
+            mid_elpstime += (end_t - stat_t) * 1000;
+        } else{
+            memset(hv, 0, MD5_CODE_LENGTH + 1);
+            memset(bch_result, 0, 2 * MD5_CODE_LENGTH + 1);
+            MD5((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
+            ByteToHexStr(hv, bch_result, MD5_CODE_LENGTH);
+            dedup_bloom(bch_result, 2 * MD5_CODE_LENGTH);
+            dedup_noread_mt(bch_result, (char *)chk_cont, 2 * MD5_CODE_LENGTH, 0, 0);
+            mt_flag = 2;
+        }
+        stat_t = ti.get_time();
+        if(mt_flag == 2){
+            chunk_not_dup++;
+            write_block(mp -> alloc_addr_point - 1, (char *)chk_cont, write_elps);
+            time_total_write += write_elps;
+            //ti.cp_all(0.2, 0);
+            //time_total += 0.2;
+        }
+        end_t = ti.get_time();
+
+        time_total += (end_t - stat_t) * 1000;
+        mid_elpstime += (end_t - stat_t) * 1000;
+        avertime_distribute(mid_elpstime);
+        avertime_distribute_less(mid_elpstime);
+
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void dedup::travel_dir(char *path) {

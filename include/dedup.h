@@ -48,7 +48,8 @@ public:
     int sha1_file_reader_noparallel(char *c_path);
     int BLAKE2b_file_reader_noparallel(char *c_path);
     int sample_md5(char *c_path);
-    std::set<std::string> sample_hash_vector;
+    int sample(char *c_path);
+
     //int dedup_process(char bch_result[], char *chk_cont, int bch_length);
     uint64_t chunk_num;
     double time_total;
@@ -73,6 +74,7 @@ private:
         char path[512];
         struct mid_para *next;
     }para;
+    std::set<std::string> sample_hash_vector;
     cp_t ti;
     int sample_length;
     uint64_t time_collect_num[1000]; //this array record the number of average time in every 0.001ms(0.001ms - 0.1ms -......)

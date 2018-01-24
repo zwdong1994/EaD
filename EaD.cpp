@@ -88,6 +88,8 @@ int main(int argc, char *argv[]) {
         std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: BLAKE2b" << std::endl;
     else if(mode == 5)
         std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: Sample_md5" << std::endl;
+    else if(mode == 6)
+        std::cout << "The deduplication scheme(EaD or traditional deduplication schemes) is: Sample_4B" << std::endl;
     else{
         std::cout << "Error deduplication scheme parameter!" << std::endl;
         return 0;
@@ -117,17 +119,14 @@ int main(int argc, char *argv[]) {
     if(prefetch_length > 0)
         std::cout << "The prefetch cache length is: " << prefetch_length << std::endl;
 
-    if(sample_l < 0){
+    if((mode == 5 || mode == 6) && sample_l < 0){
         std::cout << "Error parameter! 'sample_l' need to be larger than 0." << std::endl;
         return 0;
     }
-    if(sample_l > 0)
+    if((mode == 5 || mode == 6) && sample_l > 0)
         std::cout << "Sample length is: " << sample_l << std::endl;
 
-    if(mode == 5 && sample_l <= 0){
-        std::cout<< "Error sample length in the sample_md5 scheme." << std::endl;
-        return 0;
-    }
+
     //std::cout << "Please input the enter to start the test! " << std::endl;
     //getchar();
     dedup ded;
