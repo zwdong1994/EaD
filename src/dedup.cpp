@@ -977,7 +977,7 @@ int dedup::sample(char *path){
         stat_t = ti.get_time();
         if(mt_flag == 2){
             chunk_not_dup++;
-//            write_block(mp -> alloc_addr_point - 1, (char *)chk_cont, write_elps);
+            write_block(mp -> alloc_addr_point - 1, (char *)chk_cont, write_elps);
             time_total_write += write_elps;
             //ti.cp_all(0.2, 0);
             //time_total += 0.2;
