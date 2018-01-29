@@ -56,6 +56,7 @@ dedup::dedup() {
     collision_write_num = 0;
     only_ecc = 0;
     total_hash_num_in_sample = 0;
+    CAFTL_hash_number = 0;
 
     code_mode = 0;
     divide_mode = 0;
@@ -172,7 +173,8 @@ dedup::~dedup() {
             std::cout << "The number that hashed by 4KB chunk is: " << total_hash_num_in_sample << std::endl;
             std::cout << "The ratio of 4KB hash number is: " << total_hash_num_in_sample * 100.0 / chunk_num <<"%"<<std::endl;
         }
-
+        if(CAFTL_hash_number > 0)
+            std::cout << "The number that hashed by 4KB chunk which was stored its fingerprint is: " << CAFTL_hash_number << std::endl;
         std::cout << "The average time is " << time_aver <<"ms"<< std::endl<<std::endl;
         if(hash_time > 0){
             std::cout << "The average hash time is " << hash_time / chunk_num <<"ms"<< std::endl;
@@ -958,21 +960,24 @@ int dedup::sample(char *path){
             mt_flag = dedup_noread_mt(bch_result, (char *)chk_cont, 2 * MD5_CODE_LENGTH, cache_flag, bloom_flag);
             end_t = ti.get_time();
 
+            if(mt_flag == 2)
+                CAFTL_hash_number ++;
+
             time_total += (end_t - stat_t) * 1000;
             mid_elpstime += (end_t - stat_t) * 1000;
         } else{
-            memset(hv, 0, MD5_CODE_LENGTH + 1);
+/*            memset(hv, 0, MD5_CODE_LENGTH + 1);
             memset(bch_result, 0, 2 * MD5_CODE_LENGTH + 1);
             MD5((unsigned char *)chk_cont, (size_t)4096, (unsigned char *)hv);
             ByteToHexStr(hv, bch_result, MD5_CODE_LENGTH);
             dedup_bloom(bch_result, 2 * MD5_CODE_LENGTH);
             dedup_noread_mt(bch_result, (char *)chk_cont, 2 * MD5_CODE_LENGTH, 0, 0);
-            mt_flag = 2;
+*/            mt_flag = 2;
         }
         stat_t = ti.get_time();
         if(mt_flag == 2){
             chunk_not_dup++;
-            write_block(mp -> alloc_addr_point - 1, (char *)chk_cont, write_elps);
+//            write_block(mp -> alloc_addr_point - 1, (char *)chk_cont, write_elps);
             time_total_write += write_elps;
             //ti.cp_all(0.2, 0);
             //time_total += 0.2;

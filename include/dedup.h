@@ -65,6 +65,7 @@ public:
     uint64_t read_10000_num;
     uint64_t collision_write_num;
     uint64_t total_hash_num_in_sample;
+    uint64_t CAFTL_hash_number;
 
 private:
 
