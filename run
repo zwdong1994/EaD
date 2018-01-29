@@ -3,4 +3,4 @@
 #sudo bash sample_md5_test kernel=/mnt/kernel_vmdk/kernel vmdk=/mnt/kernel_vmdk/vmdk huawei=/mnt/huawei_firefox/app firefox=/mnt/huawei_firefox/firefox test_folder=result_1
 
 
-sudo bash sample_test kernel=/mnt/kernel_vmdk/kernel vmdk=/mnt/kernel_vmdk/vmdk huawei=/mnt/huawei_firefox/app firefox=/mnt/huawei_firefox/firefox test_folder=result_1
+sudo bash sample_test kernel=/mnt/kernel_vmdk/kernel vmdk=/mnt/kernel_vmdk/vmdk huawei=/mnt/huawei_firefox/app firefox=/mnt/huawei_firefox/firefox test_folder=result_2
