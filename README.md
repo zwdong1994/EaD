@@ -1,10 +1,10 @@
-#EaD
+# EaD
 
 EaD is an ECC assisted Deduplication scheme, which exploits the ECC values of data chunks and it completely avoiding the
 costly cryptographic hash computing. In our evaluation, comparing with existing MD5/SHA- and sampling-based 
 deduplication schemes, EaD's I/O performance is up to 4.2x, with and average of 2.5x.
 
-#Abstract
+# Abstract
 
 With the advent of NVMe and 3D NAND flash technologies, the performance of flash-based storage systems has been improved
 significantly. This has brought about a noticeable change in the performance landscape of flash-based deduplication 
@@ -20,7 +20,7 @@ our lightweight prototype implementation of the EaD system show that the hash-co
 outperforms the existing MD5/SHA- and sampling-based deduplication schemes in terms of I/O performance by up to 4.2×, 
 with an average of 2.5×.
 
-#ABout this repository
+# ABout this repository
 
 This repository is a lightweight prototype which are aimed to evaluate the performance of EaD compared to existing 
 deduplication systems. Besides, this project is a dataset-driven evaluation. We have chosen MD5, sha1 
@@ -28,7 +28,7 @@ and SHA256 as hash functions in the traditional deduplication system. Moreover, 
 deduplication schems to our evaluation for a more comprehensive evaluation.
 
 
-##Start
+# Start
 
 To start our evaluation, we need to have several operations as follows:
 
@@ -37,7 +37,7 @@ To start our evaluation, we need to have several operations as follows:
     sudo bash run    //This is a test shell script, and if you want to run it, you need modify some parameters in it.
 
 
-##Setup
+## Setup
 
     Chunk Size:             4KB
     ECC Algorithm:          BCH
@@ -46,7 +46,7 @@ To start our evaluation, we need to have several operations as follows:
     Hash Functions:         MD5, SHA1, SHA256
     Sampling Length:        the first 4B of each chunks
 
-##Datasets
+# Datasets
 
 
 
@@ -58,11 +58,11 @@ To start our evaluation, we need to have several operations as follows:
 | Firefox | 287 | 74.8% | Firefox installation files |
 
 
-##Perfomance
+# Perfomance
 
 Here is a performance report from run the 'run' shell script with specify parameters in the setup.
 
-##Average response time 
+## Average response time 
 
 Our experimental results show that EaD outperforms the MD5-, SHA-1-, SHA-256-, and sampling-based deduplication schemes 
 by up to 2.8×, 2.6×, 4.2× and 2.7×, respectively, with an average of 2.5×. The reason is that EaD does not incur any 
